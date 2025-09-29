@@ -130,7 +130,7 @@ def main():
     st.title("👟 Processador de Excel - Dados de Sapatos")
     st.markdown("---")
 
-      st.markdown("""
+    st.markdown("""
     ### Instruções:
     1. Faça upload do arquivo Excel (.xlsx ou .xlsm)
     2. O sistema processará automaticamente os dados conforme as regras especificadas
