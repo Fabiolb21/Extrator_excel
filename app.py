@@ -130,30 +130,6 @@ def main():
     st.title("👟 Processador de Excel - Dados de Sapatos")
     st.markdown("---")
     
-    st.markdown("""
-    ### Instruções:
-    1. Faça upload do arquivo Excel (.xlsx ou .xlsm)
-    2. O sistema processará automaticamente os dados conforme as regras especificadas
-    3. Baixe o arquivo processado
-    
-    ### Transformações aplicadas:
-    - **NOME_DO_SAPATO**: 10 primeiros caracteres do SKU
-    - **MARCA**: Primeiro caractere do SKU
-    - **LINHA**: 5 primeiros caracteres numéricos do SKU
-    - **MODELO**: 7º ao 10º caractere do SKU
-    - **SEQUENCIA**: 11º ao 14º caractere do SKU
-    - **SEQ**: Último caractere do SKU
-    - **QTD_EXTRA**: Quantidade + incremento baseado em regras (ao lado de QUANT)
-    - **NUM_DA_ETQ**: Coluna vazia
-    - **VALOR_DO_FILTRO**: Valor 1 em todas as linhas
-    - **PREFIXO_DA_EMP**: 7 primeiros caracteres do EAN_PRODUTO
-    - **ITEM_DE_REF**: 8º ao 12º caractere do EAN_PRODUTO + zero na frente
-    - **SERIAL**: Coluna vazia
-    - Geração de linhas extras preenchidas com dados da linha original (exceto NUM_DA_ETQ e SERIAL)
-    - Geração de múltiplos arquivos .xlsx, um para cada 'PEDIDO', com todas as colunas formatadas como texto.
-    """)
-    
-    st.markdown("---")
     
     # Upload do arquivo
     uploaded_file = st.file_uploader(
