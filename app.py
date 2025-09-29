@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import re
+import zipfile
 
 def process_excel_data(df):
     """
@@ -113,6 +114,10 @@ def process_excel_data(df):
     # Criar novo dataframe com as linhas expandidas
     final_df = pd.DataFrame(expanded_rows)
     
+    # Formatar todas as colunas como texto
+    for col in final_df.columns:
+        final_df[col] = final_df[col].astype(str)
+
     return final_df
 
 def main():
@@ -154,7 +159,7 @@ def main():
             st.dataframe(df.head(10), use_container_width=True)
             
             # Verificar se as colunas necessárias existem
-            required_columns = ["SKU", "EAN_PRODUTO", "QUANT"]
+            required_columns = ["SKU", "EAN_PRODUTO", "QUANT", "PEDIDO"]
             missing_columns = [col for col in required_columns if col not in df.columns]
             
             if missing_columns:
@@ -163,7 +168,7 @@ def main():
                 st.write(list(df.columns))
             else:
                 # Processar os dados
-                with st.spinner("Processando dados..."):
+                with st.spinner("Processando dados e gerando arquivos por pedido..."):
                     processed_df = process_excel_data(df)
                 
                 st.success(f"Dados processados com sucesso! {len(processed_df)} linhas geradas.")
@@ -181,27 +186,36 @@ def main():
                 with col3:
                     st.metric("Expansão", f"{len(processed_df)/len(df):.1f}x")
                 
-                # Download do arquivo processado
-                st.subheader("💾 Download do Arquivo Processado")
+                # Geração de múltiplos arquivos Excel por PEDIDO
+                st.subheader("💾 Download dos Arquivos Processados por Pedido")
                 
-                # Converter para Excel
-                output = io.BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    processed_df.to_excel(writer, index=False, sheet_name="Dados_Processados")
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for pedido, group_df in processed_df.groupby('PEDIDO'):
+                        output = io.BytesIO()
+                        # Usar ExcelWriter com xlsxwriter para garantir a formatação como texto
+                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                            group_df.to_excel(writer, index=False, sheet_name=f'Pedido_{pedido}')
+                            # Aplicar formato de texto a todas as colunas
+                            workbook  = writer.book
+                            worksheet = writer.sheets[f'Pedido_{pedido}']
+                            text_format = workbook.add_format({'num_format': '@'})
+                            for col_num, value in enumerate(group_df.columns.values):
+                                worksheet.set_column(col_num, col_num, None, text_format)
+                        zipf.writestr(f'Pedido_{pedido}.xlsx', output.getvalue())
                 
-                excel_data = output.getvalue()
+                zip_buffer.seek(0)
                 
                 st.download_button(
-                    label="📥 Baixar Excel Processado",
-                    data=excel_data,
-                    file_name="dados_processados.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    label="📥 Baixar Todos os Arquivos Excel (.zip)",
+                    data=zip_buffer.getvalue(),
+                    file_name="pedidos_processados.zip",
+                    mime="application/zip"
                 )
                 
         except Exception as e:
             st.error(f"Erro ao processar o arquivo: {str(e)}")
-            st.info("Verifique se o arquivo está no formato correto e não está corrompido.")
+            st.info("Verifique se o arquivo está no formato correto e não está corrompido. Certifique-se de que a coluna 'PEDIDO' existe.")
 
 if __name__ == "__main__":
     main()
-
